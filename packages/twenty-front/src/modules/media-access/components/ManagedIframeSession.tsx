@@ -1,8 +1,10 @@
 import { ManagedIframeEnableButton } from '@/media-access/components/ManagedIframeEnableButton';
 import { ManagedIframeMediaAccessSessionEffect } from '@/media-access/components/ManagedIframeMediaAccessSessionEffect';
+import { activatedIframeMediaPermissionFamilyState } from '@/media-access/states/activatedIframeMediaPermissionFamilyState';
 import { type ManagedIframeElementProps } from '@/media-access/types/ManagedIframeElementProps';
 import { getDelegatedIframeMediaPermission } from '@/media-access/utils/getDelegatedIframeMediaPermission';
 import { isIframeMediaPermissionCovered } from '@/media-access/utils/isIframeMediaPermissionCovered';
+import { useAtomFamilyState } from '@/ui/utilities/state/jotai/hooks/useAtomFamilyState';
 import { t } from '@lingui/core/macro';
 import { isNonEmptyString } from '@sniptt/guards';
 import { Fragment, useCallback, useId, useState } from 'react';
@@ -50,8 +52,10 @@ export const ManagedIframeSession = ({
   const mediaAccessSessionId = useId();
   const [nativeIframeElement, setNativeIframeElement] =
     useState<HTMLIFrameElement | null>(null);
-  const [activatedPermission, setActivatedPermission] =
-    useState<IframeMediaPermission | null>(null);
+  const [activatedPermission, setActivatedPermission] = useAtomFamilyState(
+    activatedIframeMediaPermissionFamilyState,
+    ownerId,
+  );
   const delegatedPermission = getDelegatedIframeMediaPermission({
     activatedPermission,
     permission,
@@ -64,14 +68,10 @@ export const ManagedIframeSession = ({
       coveringPermission: delegatedPermission,
     });
 
-  if (isDefined(activatedPermission) && !isActivated) {
-    setActivatedPermission(null);
-  }
-
   const anchorElement = iframeElement ?? nativeIframeElement;
   const handleDeactivate = useCallback(() => {
     setActivatedPermission(null);
-  }, []);
+  }, [setActivatedPermission]);
   const handleEnable = () => {
     if (!isDefined(permission)) {
       return;
